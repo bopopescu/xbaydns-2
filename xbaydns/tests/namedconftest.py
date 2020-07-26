@@ -73,11 +73,11 @@ class NamedConfTest(basetest.BaseTestCase):
         self.assertEqual(cmd.replace("  ", "").replace("\n","").strip(),'''
                 include "defaultzone.conf";
                 zone "sina.com.cn" {
-                    type master;
+                    type main;
                     file "dynamic/internal.sina.com.cn.file";
                 };
                 zone "mail.sina.com.cn" {
-                    type master;
+                    type main;
                     file "dynamic/internal.mail.sina.com.cn.file";
                 };
                 '''.replace("  ", "").replace("\n","").strip())

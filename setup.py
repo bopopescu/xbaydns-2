@@ -37,9 +37,9 @@ setup(
         'xbaydns/tools/xdloadview', 
         'xbaydns/tools/xdweb',
         'xbaydns/tools/xdsetup',
-        'xbaydns/tools/xdmaster',
+        'xbaydns/tools/xdmain',
         'xbaydns/tools/xdagent',
-        'xbaydns/tools/xdslave',
+        'xbaydns/tools/xdsubordinate',
         'xbaydns/tools/cleanup'],
     test_suite = 'xbaydns.tests.suite',
     entry_points = {
@@ -47,7 +47,7 @@ setup(
             'xdinitbind = xbaydns.tools.initconf:main',
             'xdsync = xbaydns.tools.confsync:main',
             'xdwherepkg = xbaydns.utils.pkg:main',
-            'xdidc2view = xbaydns.tools.master.idcview:main',
+            'xdidc2view = xbaydns.tools.main.idcview:main',
             'xdreg = xbaydns.tools.xdreg:main'
         ]
     }

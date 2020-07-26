@@ -31,7 +31,7 @@ TMPL_DEF_DIR = "%s/default"%TMPL_DIR
 TMPL_PLAT_DIR = "%s/%s/%s"%(TMPL_DIR, sysconf.system, sysconf.release)
 log.debug("template diris:%s"%TMPL_DIR)
 ERR_BACKUP = 1000
-log_setting_for_slave = """
+log_setting_for_subordinate = """
         category queries {
                 _query_log;
         };
@@ -103,19 +103,19 @@ def namedconf_file(include_files, bind_type, allow_ip):
         namedconf_tmpl = Template(tmpl_file.read())
         tmpl_file.close()
         chroot_path = os.path.realpath(sysconf.chroot_path)
-        if bind_type == 'master':
+        if bind_type == 'main':
             namedconf = namedconf_tmpl.substitute(\
                 CONF_DIR=os.path.join('/', sysconf.namedconf),
                 ALLOW_IP='127.0.0.1', 
                 ALLOW_TRANSFER='127.0.0.1', 
                 LOG_SETTING_FOR_SLAVE="",
                 WHETHER_NOTIFY='yes')
-        elif bind_type == 'slave':
+        elif bind_type == 'subordinate':
             namedconf = namedconf_tmpl.substitute(\
                 CONF_DIR=os.path.join('/', sysconf.namedconf),
                 ALLOW_IP=allow_ip, 
                 ALLOW_TRANSFER='none', 
-                LOG_SETTING_FOR_SLAVE=log_setting_for_slave,
+                LOG_SETTING_FOR_SLAVE=log_setting_for_subordinate,
                 WHETHER_NOTIFY='no')
         else:
             return False
@@ -145,9 +145,9 @@ def create_destdir():
     os.makedirs("%s/%s/acl"%(tmpdir, sysconf.namedconf))
     os.makedirs("%s/%s/dynamic"%(tmpdir, sysconf.namedconf))
     os.chown("%s/%s/dynamic"%(tmpdir, sysconf.namedconf), sysconf.named_uid, 0)
-    os.mkdir("%s/%s/master"%(tmpdir, sysconf.namedconf))
-    os.mkdir("%s/%s/slave"%(tmpdir, sysconf.namedconf))
-    os.chown("%s/%s/slave"%(tmpdir, sysconf.namedconf), sysconf.named_uid, 0)
+    os.mkdir("%s/%s/main"%(tmpdir, sysconf.namedconf))
+    os.mkdir("%s/%s/subordinate"%(tmpdir, sysconf.namedconf))
+    os.chown("%s/%s/subordinate"%(tmpdir, sysconf.namedconf), sysconf.named_uid, 0)
     return tmpdir
 
 def create_conf(tmpdir, bind_type, allow_ip):
@@ -175,9 +175,9 @@ def create_conf(tmpdir, bind_type, allow_ip):
         tmpfile.write(namedroot)
         tmpfile.close()
         print ("copy template file to %s"%tmpdir)
-        shutil.copyfile(TMPL_EMPTY_DB, "%s/%s/master/empty.db"%(tmpdir, sysconf.namedconf))
-        shutil.copyfile(TMPL_LOCALHOST_FORWARD_DB, "%s/%s/master/localhost-forward.db"%(tmpdir, sysconf.namedconf))
-        shutil.copyfile(TMPL_LOCALHOST_REVERSE_DB, "%s/%s/master/localhost-reverse.db"%(tmpdir, sysconf.namedconf))
+        shutil.copyfile(TMPL_EMPTY_DB, "%s/%s/main/empty.db"%(tmpdir, sysconf.namedconf))
+        shutil.copyfile(TMPL_LOCALHOST_FORWARD_DB, "%s/%s/main/localhost-forward.db"%(tmpdir, sysconf.namedconf))
+        shutil.copyfile(TMPL_LOCALHOST_REVERSE_DB, "%s/%s/main/localhost-reverse.db"%(tmpdir, sysconf.namedconf))
         shutil.copyfile(TMPL_RNDC_KEY, "%s/%s/rndc.key"%(tmpdir, sysconf.namedconf))
         print ("chmod and chown config file")
         os.chmod("%s/%s/rndc.key"%(tmpdir, sysconf.namedconf),0600)
@@ -202,7 +202,7 @@ def install_conf(tmpdir, chrootdir):
         return False
     
 def usage():
-    print "usage: %s <master|slave [masterip]> [-bc]"%__file__
+    print "usage: %s <main|subordinate [mainip]> [-bc]"%__file__
     
 def main():
     # check root
@@ -216,9 +216,9 @@ def main():
         return errno.EINVAL
 
     allow_ip = ''
-    if sys.argv[1] == 'master' :
+    if sys.argv[1] == 'main' :
         options = sys.argv[2:]
-    elif sys.argv[1] == 'slave' and len(sys.argv) >= 3:
+    elif sys.argv[1] == 'subordinate' and len(sys.argv) >= 3:
         allow_ip = sys.argv[2]
         options = sys.argv[3:]
     else:
@@ -259,8 +259,8 @@ def main():
     log.debug(tmpdir)
     #清理旧世界
     shutil.rmtree(os.path.join(sysconf.chroot_path,sysconf.namedconf,"acl"),ignore_errors=True)
-    shutil.rmtree(os.path.join(sysconf.chroot_path,sysconf.namedconf,"master"),ignore_errors=True)
-    shutil.rmtree(os.path.join(sysconf.chroot_path,sysconf.namedconf,"slave"),ignore_errors=True)
+    shutil.rmtree(os.path.join(sysconf.chroot_path,sysconf.namedconf,"main"),ignore_errors=True)
+    shutil.rmtree(os.path.join(sysconf.chroot_path,sysconf.namedconf,"subordinate"),ignore_errors=True)
     shutil.rmtree(os.path.join(sysconf.chroot_path,sysconf.namedconf,"dynamic"),ignore_errors=True)
     shutil.rmtree(os.path.join(sysconf.chroot_path,sysconf.namedconf,"view"),ignore_errors=True)
     if create_conf(tmpdir, bind_type, allow_ip) == False or install_conf(tmpdir, chrootdir) == False:

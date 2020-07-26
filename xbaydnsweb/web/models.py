@@ -127,7 +127,7 @@ class Node(models.Model):
 
     def save(self):
         from xbaydnsweb.web.utils import *
-        self.type = 'slave'
+        self.type = 'subordinate'
         tohash = "%s%f" % (self.codename , time.time())
         self.authzcode = hashlib.sha1(tohash).hexdigest()
         self.pubkey = ''

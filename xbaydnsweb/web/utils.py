@@ -93,7 +93,7 @@ def genNamedConf(path,renew=True):
     nc = NamedConf()
     ipareas = IPArea.objects.filter(~Q(ip='0'))
     old_ipareas = IPArea.objects.filter(ip='0')
-    slave_ips = map(lambda x:x.ip,Node.objects.all())
+    subordinate_ips = map(lambda x:x.ip,Node.objects.all())
     
     for iparea in ipareas:
         srout = eval(iparea.service_route)
@@ -106,12 +106,12 @@ def genNamedConf(path,renew=True):
         nc.addAcl(aclname,list(eval(iparea.ip)))
         #每个View对应一种ACL
         viewname='view_view%s'%serial
-        nc.addView(viewname,slave_ips,[aclname,])
+        nc.addView(viewname,subordinate_ips,[aclname,])
         iparea.view = viewname
         iparea.save()
     #增加any的ACL和View
     nc.addAcl('acl_default',['any',])
-    nc.addView('view_viewdefault',slave_ips,['any',])
+    nc.addView('view_viewdefault',subordinate_ips,['any',])
     view_diff = {}
     if renew == True:
         view_diff = getViewDiff(ipareas,old_ipareas)
@@ -177,7 +177,7 @@ def getDetectedIDC():
         agents = []
     return agents
 
-def update_allow_transfer(slaveip, path=os.path.join(sysconf.chroot_path,sysconf.namedconf)):
+def update_allow_transfer(subordinateip, path=os.path.join(sysconf.chroot_path,sysconf.namedconf)):
 
     named_conf_path = os.path.join(path, "named.conf")
     named_conf_string = open(named_conf_path, 'r').read()
@@ -198,7 +198,7 @@ def update_allow_transfer(slaveip, path=os.path.join(sysconf.chroot_path,sysconf
     if ip in allows:
         return True
 
-    allows.append(slaveip)
+    allows.append(subordinateip)
     allows.append('')
     allow_list = 'allow-transfer{ %s }' % '; '.join(allows)
 

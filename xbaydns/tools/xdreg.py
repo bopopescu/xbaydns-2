@@ -14,7 +14,7 @@ import base64
 
 xdprefix = os.environ['XDPREFIX']
 agenthome = xdprefix+'/home/xdagent'
-slavehome = xdprefix+'/home/xdslave'
+subordinatehome = xdprefix+'/home/xdsubordinate'
 
 def reg_agent(server, authzcode, pubkey):
     import urllib2
@@ -29,13 +29,13 @@ def reg_agent(server, authzcode, pubkey):
         sys.exit(1)
 
     open(os.path.join(agenthome,'myname'), 'w').write(resp['yourname'])
-    open(os.path.join(agenthome,'.ssh/known_hosts'), 'w').write(server + ' ' + resp['master_pubkey'])
+    open(os.path.join(agenthome,'.ssh/known_hosts'), 'w').write(server + ' ' + resp['main_pubkey'])
     open(os.path.join('/tmp', 'MASTERHOME'), 'w').write(resp['xbaydnshome'])
 
 
-def reg_slave(server, authzcode, pubkey):
+def reg_subordinate(server, authzcode, pubkey):
     import urllib2
-    url = "http://%s:8080/slave/create/%s/%s/" % (server, authzcode, pubkey.replace('/',',').replace(' ', ';')[0:len(pubkey) - 1])
+    url = "http://%s:8080/subordinate/create/%s/%s/" % (server, authzcode, pubkey.replace('/',',').replace(' ', ';')[0:len(pubkey) - 1])
     print "URL:%s" % url
     sock = urllib2.urlopen(url)
     stream = sock.read()
@@ -46,8 +46,8 @@ def reg_slave(server, authzcode, pubkey):
         print('Sorry, %s' % resp['retmsg'])
         sys.exit(1)
  
-    open(os.path.join(slavehome, 'myname'), 'w').write(resp['yourname'])
-    open(os.path.join(slavehome, '.ssh/known_hosts'), 'w').write(server + ' ' + resp['master_pubkey'])
+    open(os.path.join(subordinatehome, 'myname'), 'w').write(resp['yourname'])
+    open(os.path.join(subordinatehome, '.ssh/known_hosts'), 'w').write(server + ' ' + resp['main_pubkey'])
     open(os.path.join('/tmp', 'MASTERHOME'), 'w').write(resp['xbaydnshome'])
 
 def main():
@@ -56,10 +56,10 @@ def main():
     from optparse import OptionParser
     VERSION = ''
 
-    parser = OptionParser(usage='usage: %prog <slave|agent> [options]',
+    parser = OptionParser(usage='usage: %prog <subordinate|agent> [options]',
                           version='%%prog %s' % VERSION)
-    parser.add_option('-m', '--master', action='store', dest='server',
-                      default='', help='xbaydns master ip')
+    parser.add_option('-m', '--main', action='store', dest='server',
+                      default='', help='xbaydns main ip')
     parser.add_option('-a', '--authzcode', dest='authzcode',
                       default='', help='authzcode for authentication')
 
@@ -75,12 +75,12 @@ def main():
 
         pubkey_string = open(os.path.join(agenthome,'rsync-key.pub'), 'r').read()
         return reg_agent(options.server, options.authzcode, pubkey_string)
-    elif (args[0] == 'slave'):
+    elif (args[0] == 'subordinate'):
         if len(options.authzcode) == 0:
             parser.print_help()
             sys.exit(1)
-        pubkey_string = open(os.path.join(slavehome, 'rsync-key.pub'), 'r').read()
-        return reg_slave(options.server, options.authzcode, pubkey_string)
+        pubkey_string = open(os.path.join(subordinatehome, 'rsync-key.pub'), 'r').read()
+        return reg_subordinate(options.server, options.authzcode, pubkey_string)
     else:
         parser.print_help()
         sys.exit(1)

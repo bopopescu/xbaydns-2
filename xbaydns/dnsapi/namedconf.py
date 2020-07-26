@@ -73,7 +73,7 @@ class NamedConf(object):
     view 增加的view的名称 
     match-client 匹配于该view的acl汇总
     '''
-    def addView(self,view,slaves,matchClient=[]):
+    def addView(self,view,subordinates,matchClient=[]):
         tsig='%s-view-key'%view
         if len(matchClient)>0:
             matchClient=map(lambda x:'"%s";'%x,matchClient)
@@ -89,8 +89,8 @@ key "%s" {
         keys=keys%(tsig,self.genSecret(tsig))
         key_tsig='key "%s"'%tsig
         s1=''
-        for slave in slaves:
-            server='''\n    server %s { keys "%s"; };'''%(slave,tsig)
+        for subordinate in subordinates:
+            server='''\n    server %s { keys "%s"; };'''%(subordinate,tsig)
             s1 = s1 + server
         s='''view "%s" { match-clients { %s%s; }; %s %%s };
         '''%(view,matchClient,key_tsig,s1)
@@ -142,7 +142,7 @@ key "%s" {
                 fname=self.getDomainFileName(d,view)
                 s='''
     zone "%(domain)s" {
-        type master;
+        type main;
         file "%(fname)s";
     };'''%{'domain':d,
            'fname':fname}

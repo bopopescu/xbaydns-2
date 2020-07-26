@@ -60,7 +60,7 @@ def regen_allkey():
         for idc in IDC.objects.all():
             if idc.pubkey.startswith('ssh-dss'):
                 open(os.path.join(sysconf.xdprefix, 'home/xbaydns/.ssh/authorized_keys'), 'a').write(idc.pubkey + '\n')
-        for node in Node.objects.filter(type = 'slave'):
+        for node in Node.objects.filter(type = 'subordinate'):
             if node.pubkey.startswith('ssh-dss'):
                 open(os.path.join(sysconf.xdprefix, 'home/xbaydns/.ssh/authorized_keys'), 'a').write(node.pubkey + '\n')
     except:
@@ -88,7 +88,7 @@ def create_agent(request, authzcode, pubkey):
 
     try:
         idc.regsave()
-        master_pubkey=open('/etc/ssh/ssh_host_rsa_key.pub', 'r').read()
+        main_pubkey=open('/etc/ssh/ssh_host_rsa_key.pub', 'r').read()
     except:
         print traceback.print_exc()
         resp['retcode'] = 'FAIL'
@@ -99,14 +99,14 @@ def create_agent(request, authzcode, pubkey):
     if regen_allkey():
         resp['retcode'] = 'SUCC'
         resp['yourname'] = idc.alias
-        resp['master_pubkey'] = master_pubkey
+        resp['main_pubkey'] = main_pubkey
         resp['xbaydnshome'] = os.path.join(sysconf.xdprefix, 'home/xbaydns')
     else:
         resp['retcode'] = 'FAIL'
         resp['retmsg'] = "Internal server error"
     return HttpResponse(repr(resp))
 
-def create_slave(request, authzcode, pubkey):
+def create_subordinate(request, authzcode, pubkey):
     pubkey = pubkey.replace(',', '/').replace(';', ' ')
     print "AUTHZCODE:%s" % authzcode
     print "PUBKEY:%s" % pubkey
@@ -125,7 +125,7 @@ def create_slave(request, authzcode, pubkey):
 
     try:
         node.regsave()
-        master_pubkey=open('/etc/ssh/ssh_host_rsa_key.pub', 'r').read()
+        main_pubkey=open('/etc/ssh/ssh_host_rsa_key.pub', 'r').read()
     except:
         print traceback.print_exc()
         resp['retcode'] = 'FAIL'
@@ -135,7 +135,7 @@ def create_slave(request, authzcode, pubkey):
     if regen_allkey():
         resp['retcode'] = 'SUCC'
         resp['yourname'] = node.codename
-        resp['master_pubkey'] = master_pubkey
+        resp['main_pubkey'] = main_pubkey
         resp['xbaydnshome'] = os.path.join(sysconf.xdprefix, 'home/xbaydns')
     else:
         resp['retcode'] = 'FAIL'
